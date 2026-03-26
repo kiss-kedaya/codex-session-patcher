@@ -1,6 +1,6 @@
 [project]
 name = "codex-session-patcher"
-version = "1.1.0"
+version = "1.2.0"
 description = "轻量级 Codex CLI 会话重写工具，绕过 AI 拒绝回复"
 readme = "README.md"
 requires-python = ">=3.8"

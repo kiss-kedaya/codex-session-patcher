@@ -8,6 +8,7 @@ export const useCTFStore = defineStore('ctf', {
     loading: false,
     installLoading: false,
     globalInstallLoading: false,
+    claudeInstallLoading: false,
 
     // 提示词改写
     originalRequest: '',
@@ -15,6 +16,7 @@ export const useCTFStore = defineStore('ctf', {
     rewriteStrategy: '',
     rewriteLoading: false,
     rewriteError: null,
+    rewriteTarget: 'codex',  // 'codex' | 'claude_code'
   }),
 
   actions: {
@@ -65,7 +67,7 @@ export const useCTFStore = defineStore('ctf', {
       }
     },
 
-    // 启用全局模式
+    // 启用全局模式 (Codex)
     async installGlobal() {
       this.globalInstallLoading = true
       try {
@@ -81,7 +83,7 @@ export const useCTFStore = defineStore('ctf', {
       }
     },
 
-    // 禁用全局模式
+    // 禁用全局模式 (Codex)
     async uninstallGlobal() {
       this.globalInstallLoading = true
       try {
@@ -97,15 +99,48 @@ export const useCTFStore = defineStore('ctf', {
       }
     },
 
+    // 安装 Claude Code CTF 配置
+    async installClaude() {
+      this.claudeInstallLoading = true
+      try {
+        const response = await api.post('/ctf/claude/install')
+        if (response.success) {
+          await this.fetchStatus()
+        }
+        return response
+      } catch (error) {
+        return { success: false, message: error.message }
+      } finally {
+        this.claudeInstallLoading = false
+      }
+    },
+
+    // 卸载 Claude Code CTF 配置
+    async uninstallClaude() {
+      this.claudeInstallLoading = true
+      try {
+        const response = await api.post('/ctf/claude/uninstall')
+        if (response.success) {
+          await this.fetchStatus()
+        }
+        return response
+      } catch (error) {
+        return { success: false, message: error.message }
+      } finally {
+        this.claudeInstallLoading = false
+      }
+    },
+
     // 改写提示词
-    async rewritePrompt(originalRequest) {
+    async rewritePrompt(originalRequest, target = null) {
       this.rewriteLoading = true
       this.rewriteError = null
       this.originalRequest = originalRequest
 
       try {
         const response = await api.post('/prompt-rewrite', {
-          original_request: originalRequest
+          original_request: originalRequest,
+          target: target || this.rewriteTarget,
         })
 
         if (response.success) {

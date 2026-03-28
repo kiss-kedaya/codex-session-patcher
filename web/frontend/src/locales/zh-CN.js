@@ -122,8 +122,10 @@ export default {
     disableGlobal: '禁用全局',
     confirmDisableCtf: '确定要禁用 CTF/渗透模式吗？',
     confirmDisableGlobal: '确定要禁用全局模式吗？禁用后新的会话将不再自动生效。',
+    confirmDisableClaude: '确定要禁用 Claude Code CTF/渗透模式吗？将删除 CTF 工作空间中的 CLAUDE.md。',
     promptRewrite: '提示词改写',
     promptRewriteDesc: '将可能被拒绝的请求改写为更易接受的形式',
+    targetPlatform: '目标平台',
     originalPrompt: '原始请求',
     originalPromptPlaceholder: '输入可能被拒绝的请求...',
     rewrittenPrompt: '改写结果',
@@ -136,6 +138,9 @@ export default {
     noAiConfig: '请先在「设置」中配置 AI API',
     aiAnalyze: 'AI 分析',
     aiGenerated: 'AI 已生成',
+    claudeDesc: '创建 CTF 工作空间，通过项目级 CLAUDE.md 注入安全测试上下文。',
+    activationCommand: '激活命令',
+    claudeWarning: '需要从 CTF 工作空间目录启动 Claude Code 才能生效',
   },
 
   // 设置

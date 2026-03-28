@@ -122,8 +122,10 @@ export default {
     disableGlobal: 'Disable Global',
     confirmDisableCtf: 'Are you sure you want to disable CTF mode?',
     confirmDisableGlobal: 'Are you sure you want to disable global mode? New sessions will no longer be affected.',
+    confirmDisableClaude: 'Are you sure you want to disable Claude Code CTF mode? This will delete CLAUDE.md from the CTF workspace.',
     promptRewrite: 'Prompt Rewrite',
     promptRewriteDesc: 'Rewrite sensitive requests to be more acceptable',
+    targetPlatform: 'Target Platform',
     originalPrompt: 'Original Request',
     originalPromptPlaceholder: 'Enter a request that might be refused...',
     rewrittenPrompt: 'Rewritten Result',
@@ -136,6 +138,9 @@ export default {
     noAiConfig: 'Please configure AI API in Settings first',
     aiAnalyze: 'AI Analyze',
     aiGenerated: 'AI Generated',
+    claudeDesc: 'Create CTF workspace with project-level CLAUDE.md for security testing context.',
+    activationCommand: 'Activation Command',
+    claudeWarning: 'Must launch Claude Code from the CTF workspace directory',
   },
 
   // Settings

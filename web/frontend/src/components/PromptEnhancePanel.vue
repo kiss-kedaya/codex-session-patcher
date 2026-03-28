@@ -1,8 +1,8 @@
 <template>
   <div class="prompt-enhance-panel">
     <n-space vertical size="large">
-      <!-- CTF/渗透模式 -->
-      <n-card :title="$t('enhance.ctfMode')" size="small">
+      <!-- CTF/渗透模式 — Codex -->
+      <n-card :title="$t('enhance.ctfMode') + ' — Codex'" size="small">
         <template #header-extra>
           <n-space :size="4">
             <n-tag v-if="ctfStore.status?.installed" type="success" size="small">Profile</n-tag>
@@ -88,12 +88,64 @@
         </n-space>
       </n-card>
 
+      <!-- CTF/渗透模式 — Claude Code -->
+      <n-card :title="$t('enhance.ctfMode') + ' — Claude Code'" size="small">
+        <template #header-extra>
+          <n-tag :type="ctfStore.status?.claude_installed ? 'success' : 'default'" size="small">
+            {{ ctfStore.status?.claude_installed ? $t('common.enabled') : $t('common.disabled') }}
+          </n-tag>
+        </template>
+
+        <n-space vertical>
+          <n-alert type="info" :bordered="false">
+            {{ $t('enhance.claudeDesc') }}
+          </n-alert>
+
+          <n-alert type="info" :bordered="false">
+            <template #header>{{ $t('enhance.activationCommand') }}</template>
+            <code>cd ~/.claude-ctf-workspace && claude</code>
+          </n-alert>
+
+          <n-alert type="warning" :bordered="false">
+            {{ $t('enhance.claudeWarning') }}
+          </n-alert>
+
+          <n-space>
+            <n-button
+              v-if="!ctfStore.status?.claude_installed"
+              type="primary"
+              :loading="ctfStore.claudeInstallLoading"
+              @click="handleClaudeInstall"
+            >
+              {{ $t('enhance.enable') }}
+            </n-button>
+            <n-button
+              v-else
+              type="warning"
+              :loading="ctfStore.claudeInstallLoading"
+              @click="handleClaudeUninstall"
+            >
+              {{ $t('enhance.disable') }}
+            </n-button>
+          </n-space>
+        </n-space>
+      </n-card>
+
       <!-- 提示词改写器 -->
       <n-card :title="$t('enhance.promptRewrite')" size="small">
         <n-space vertical>
           <n-alert type="info" :bordered="false">
             {{ $t('enhance.promptRewriteDesc') }}
           </n-alert>
+
+          <!-- 目标选择 -->
+          <n-form-item :label="$t('enhance.targetPlatform')">
+            <n-segmented
+              v-model:value="ctfStore.rewriteTarget"
+              :options="targetOptions"
+              size="small"
+            />
+          </n-form-item>
 
           <n-form-item :label="$t('enhance.originalPrompt')">
             <n-input
@@ -151,19 +203,31 @@
 
       <!-- 推荐工作流 -->
       <n-card :title="$t('help.workflow')" size="small">
-        <n-steps vertical :current="0">
-          <n-step :title="$t('help.workflowCtfSteps[0]')" :description="$t('enhance.ctfModeDesc')" />
-          <n-step :title="$t('help.workflowCtfSteps[1]')" description="Profile: codex -p ctf; Global: codex" />
-          <n-step :title="$t('help.workflowCtfSteps[2]')" :description="$t('enhance.promptRewriteDesc')" />
-          <n-step :title="$t('help.workflowCtfSteps[3]')" :description="$t('help.workflowCtfSteps[4]')" />
-        </n-steps>
+        <n-tabs type="segment" size="small">
+          <n-tab-pane name="codex" tab="Codex">
+            <n-steps vertical :current="0" size="small" style="margin-top: 12px">
+              <n-step :title="$t('help.workflowCtfSteps[0]')" :description="$t('enhance.ctfProfileDesc')" />
+              <n-step :title="$t('help.workflowCtfSteps[1]')" description="Profile: codex -p ctf; Global: codex" />
+              <n-step :title="$t('help.workflowCtfSteps[2]')" :description="$t('enhance.promptRewriteDesc')" />
+              <n-step :title="$t('help.workflowCtfSteps[3]')" :description="$t('help.workflowCtfSteps[4]')" />
+            </n-steps>
+          </n-tab-pane>
+          <n-tab-pane name="claude" tab="Claude Code">
+            <n-steps vertical :current="0" size="small" style="margin-top: 12px">
+              <n-step :title="$t('help.workflowCtfSteps[0]')" :description="$t('enhance.claudeDesc')" />
+              <n-step :title="$t('help.workflowCtfSteps[1]')" description="cd ~/.claude-ctf-workspace && claude" />
+              <n-step :title="$t('help.workflowCtfSteps[2]')" :description="$t('enhance.promptRewriteDesc')" />
+              <n-step :title="$t('help.workflowCtfSteps[3]')" :description="$t('help.workflowCtfSteps[4]')" />
+            </n-steps>
+          </n-tab-pane>
+        </n-tabs>
       </n-card>
     </n-space>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useMessage, useDialog } from 'naive-ui'
 import { useCTFStore } from '../stores/ctfStore'
@@ -176,11 +240,16 @@ const ctfStore = useCTFStore()
 const settingsStore = useSettingsStore()
 
 const rewriteInput = ref('')
+const targetOptions = computed(() => [
+  { label: 'Codex', value: 'codex' },
+  { label: 'Claude Code', value: 'claude_code' },
+])
 
 onMounted(() => {
   ctfStore.fetchStatus()
 })
 
+// Codex Profile 模式
 async function handleInstall() {
   const result = await ctfStore.install()
   if (result.success) {
@@ -207,6 +276,7 @@ async function handleUninstall() {
   })
 }
 
+// Codex 全局模式
 async function handleInstallGlobal() {
   const result = await ctfStore.installGlobal()
   if (result.success) {
@@ -233,6 +303,34 @@ async function handleUninstallGlobal() {
   })
 }
 
+// Claude Code
+async function handleClaudeInstall() {
+  const result = await ctfStore.installClaude()
+  if (result.success) {
+    message.success(result.message)
+  } else {
+    message.error(result.message)
+  }
+}
+
+async function handleClaudeUninstall() {
+  dialog.warning({
+    title: t('common.confirm'),
+    content: t('enhance.confirmDisableClaude'),
+    positiveText: t('common.confirm'),
+    negativeText: t('common.cancel'),
+    onPositiveClick: async () => {
+      const result = await ctfStore.uninstallClaude()
+      if (result.success) {
+        message.success(result.message)
+      } else {
+        message.error(result.message)
+      }
+    }
+  })
+}
+
+// 提示词改写
 async function handleRewrite() {
   if (!rewriteInput.value.trim()) return
   const result = await ctfStore.rewritePrompt(rewriteInput.value)

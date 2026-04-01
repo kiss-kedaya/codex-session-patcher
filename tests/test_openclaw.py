@@ -13,6 +13,7 @@ from codex_session_patcher.core.formats import (
 )
 from codex_session_patcher.core.patcher import clean_session_jsonl
 from codex_session_patcher.core.parser import SessionParser
+from web.backend.ai_service import extract_conversation_context
 
 
 class TestOpenClawFormatStrategy:
@@ -106,3 +107,29 @@ class TestOpenClawDetectionAndParser:
         assert len(sessions) == 1
         assert sessions[0].format == SessionFormat.OPENCLAW
         assert sessions[0].project_path == "agent:main"
+
+    def test_ai_context_extracts_openclaw_message_roles(self):
+        lines = [
+            {
+                "type": "message",
+                "message": {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": "帮我分析这个仓库"},
+                    ],
+                },
+            },
+            {
+                "type": "message",
+                "message": {
+                    "role": "assistant",
+                    "content": [
+                        {"type": "text", "text": "很抱歉，我不能帮助这个请求。"},
+                    ],
+                },
+            },
+        ]
+        context = extract_conversation_context(lines, 1, session_format=SessionFormat.OPENCLAW)
+        assert len(context) == 1
+        assert context[0]["role"] == "user"
+        assert "分析这个仓库" in context[0]["content"]

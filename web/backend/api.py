@@ -1,5 +1,5 @@
 """
-API 路由 — 支持 Codex CLI 和 Claude Code 双格式
+API 路由 — 支持 Codex CLI / Claude Code / OpenCode / OpenClaw
 """
 from __future__ import annotations
 
@@ -170,7 +170,7 @@ def check_session_refusal(file_path: str, fmt: SessionFormat = SessionFormat.COD
 
 
 def count_thinking_blocks(file_path: str, fmt: SessionFormat) -> int:
-    """统计 Claude Code 会话中 thinking block 的数量"""
+    """统计 Claude Code / OpenClaw 会话中 thinking block 的数量"""
     if fmt not in (SessionFormat.CLAUDE_CODE, SessionFormat.OPENCLAW):
         return 0
     count = 0
@@ -235,7 +235,7 @@ def list_sessions(
     elif session_format == SessionFormat.OPENCODE:
         scan_opencode = True
 
-    # 扫描 JSONL 格式会话（Codex / Claude Code）
+    # 扫描 JSONL 格式会话（Codex / Claude Code / OpenClaw）
     for session_dir, fmt in scan_targets:
         parser = SessionParser(session_dir, session_format=fmt)
         for info in parser.list_sessions():
@@ -402,7 +402,7 @@ def preview_session(file_path: str, mock_response: str = MOCK_RESPONSE,
         content = ''
         line_type = line.get('type', '')
 
-        # Claude Code / OpenCode 格式
+        # Claude Code / OpenCode / OpenClaw 格式
         if line_type == 'human':
             role = 'user'
             msg = line.get('message', {})
@@ -466,7 +466,7 @@ def preview_session(file_path: str, mock_response: str = MOCK_RESPONSE,
     thinking_items = strategy.get_thinking_items(parsed_lines)
     reasoning_count = len(thinking_items)
 
-    # 统计 thinking blocks（Claude Code 格式嵌入在 content 中）
+    # 统计 thinking blocks（Claude Code / OpenClaw 格式嵌入在 content 中）
     thinking_count = 0
     for msg_line in parsed_lines:
         _, removed = strategy.remove_thinking_from_message(msg_line)
@@ -522,7 +522,7 @@ def patch_session(file_path: str, mock_response: str = MOCK_RESPONSE,
             # 写回 SQLite
             adapter.save_session_messages(session_id, cleaned_lines)
         else:
-            # JSONL 处理（Codex / Claude Code）
+            # JSONL 处理（Codex / Claude Code / OpenClaw）
             if create_backup:
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                 backup_path = f"{file_path}.{timestamp}.bak"

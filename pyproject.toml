@@ -1,7 +1,7 @@
 [project]
 name = "codex-session-patcher"
 version = "1.3.1"
-description = "AI coding session cleaner with CTF/pentest prompt injection — supports Codex, Claude Code, OpenCode"
+description = "AI coding session cleaner with CTF/pentest prompt injection — supports Codex, Claude Code, OpenCode, OpenClaw"
 readme = "README.md"
 requires-python = ">=3.8"
 license = {text = "MIT"}

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-会话清理逻辑 — 支持 Codex CLI 和 Claude Code 两种格式
+会话清理逻辑 — 支持 Codex CLI / Claude Code / OpenCode / OpenClaw
 """
 
 import json
@@ -113,7 +113,7 @@ def clean_session_jsonl(
             lines[idx] = None
             modified = True
 
-    # 3. 移除嵌入在消息 content[] 中的 thinking 块（Claude Code 格式）
+    # 3. 移除嵌入在消息 content[] 中的 thinking 块（Claude Code / OpenCode / OpenClaw）
     for idx, line in enumerate(lines):
         if line is None:
             continue

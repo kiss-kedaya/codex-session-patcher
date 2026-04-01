@@ -72,7 +72,7 @@ def extract_conversation_context(
                 if content:
                     context.append({'role': 'assistant', 'content': content[:2000]})
     else:
-        # Claude Code / OpenCode 格式（结构相同）
+        # Claude Code / OpenCode / OpenClaw
         for idx in range(refusal_index - 1, -1, -1):
             if len(context) >= max_messages:
                 break
@@ -86,6 +86,17 @@ def extract_conversation_context(
                 content = strategy.extract_text_content(line)
                 if content:
                     context.append({'role': 'assistant', 'content': content[:2000]})
+            elif line_type == 'message':
+                msg = line.get('message', {})
+                role = msg.get('role')
+                if role == 'user':
+                    content = _extract_user_content_claude(line)
+                    if content:
+                        context.append({'role': 'user', 'content': content[:2000]})
+                elif role == 'assistant':
+                    content = strategy.extract_text_content(line)
+                    if content:
+                        context.append({'role': 'assistant', 'content': content[:2000]})
 
     context.reverse()
     return context
@@ -108,7 +119,7 @@ def _extract_user_content_codex(payload: dict) -> str:
 
 
 def _extract_user_content_claude(line: dict) -> str:
-    """提取 Claude Code 用户消息的文本内容"""
+    """提取 Claude Code / OpenClaw 用户消息的文本内容"""
     message = line.get('message', {})
     content = message.get('content', '')
     if isinstance(content, str):

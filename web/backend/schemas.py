@@ -33,6 +33,8 @@ class ChangeDetail(BaseModel):
 class Session(BaseModel):
     """会话信息"""
     id: str
+    display_id: Optional[str] = None
+    agent_name: Optional[str] = None
     filename: str
     path: str
     date: str

@@ -135,7 +135,7 @@
             >
               <div class="session-main" @click="selectSession(session.id)">
                 <div class="session-info">
-                  <span class="session-id">{{ session.id }}</span>
+                  <span class="session-id">{{ formatSessionTitle(session) }}</span>
                   <span class="session-time">{{ formatTime(session.mtime) }}</span>
                 </div>
                 <div class="session-meta">
@@ -274,7 +274,10 @@ const filteredSessions = computed(() => {
     const query = searchQuery.value.toLowerCase()
     list = list.filter(s =>
       s.id.toLowerCase().includes(query) ||
-      s.filename.toLowerCase().includes(query)
+      (s.display_id || '').toLowerCase().includes(query) ||
+      s.filename.toLowerCase().includes(query) ||
+      (s.agent_name || '').toLowerCase().includes(query) ||
+      (s.project_path || '').toLowerCase().includes(query)
     )
   }
   return list
@@ -363,6 +366,15 @@ async function refresh() {
 function truncate(str, len) {
   if (!str) return ''
   return str.length > len ? str.slice(0, len) + '...' : str
+}
+
+function formatSessionTitle(session) {
+  if (session.format === 'openclaw') {
+    const agent = session.agent_name || 'unknown'
+    const sid = session.display_id || session.id
+    return `${agent} · ${sid}`
+  }
+  return session.display_id || session.id
 }
 
 function formatSize(bytes) {

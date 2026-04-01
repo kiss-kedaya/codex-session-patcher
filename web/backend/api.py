@@ -142,6 +142,20 @@ def _to_schema_format(fmt: SessionFormat) -> SessionFormatEnum:
     return SessionFormatEnum.CODEX
 
 
+def _extract_openclaw_agent_name(project_path: Optional[str]) -> Optional[str]:
+    if not project_path or not project_path.startswith('agent:'):
+        return None
+    return project_path.split(':', 1)[1] or None
+
+
+def _make_session_id(info) -> str:
+    if info.format == SessionFormat.OPENCLAW:
+        agent_name = _extract_openclaw_agent_name(info.project_path) or 'unknown'
+        filename_stem = os.path.splitext(info.filename)[0]
+        return f"openclaw:{agent_name}:{filename_stem}"
+    return info.session_id
+
+
 # ─── 会话扫描 ────────────────────────────────────────────────────────────────
 
 def check_session_refusal(file_path: str, fmt: SessionFormat = SessionFormat.CODEX) -> tuple[bool, int]:
@@ -254,7 +268,9 @@ def list_sessions(
                         backup_count += 1
 
                 sessions.append(Session(
-                    id=info.session_id,
+                    id=_make_session_id(info),
+                    display_id=info.session_id,
+                    agent_name=_extract_openclaw_agent_name(info.project_path),
                     filename=info.filename,
                     path=info.path,
                     date=info.date,
@@ -294,6 +310,7 @@ def list_sessions(
 
                     sessions.append(Session(
                         id=oc_info['session_id'],
+                        display_id=oc_info['session_id'],
                         filename=oc_info['session_id'],
                         path=DEFAULT_OPENCODE_DB,
                         date=oc_info['date'],

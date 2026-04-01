@@ -14,6 +14,7 @@ from codex_session_patcher.core.formats import (
 from codex_session_patcher.core.patcher import clean_session_jsonl
 from codex_session_patcher.core.parser import SessionParser
 from web.backend.ai_service import extract_conversation_context
+from web.backend.api import _extract_openclaw_agent_name, _make_session_id
 
 
 class TestOpenClawFormatStrategy:
@@ -133,3 +134,17 @@ class TestOpenClawDetectionAndParser:
         assert len(context) == 1
         assert context[0]["role"] == "user"
         assert "分析这个仓库" in context[0]["content"]
+
+    def test_openclaw_composite_id_and_agent_name(self, tmp_path):
+        session_dir = tmp_path / ".openclaw" / "agents" / "writer" / "sessions"
+        session_dir.mkdir(parents=True)
+        file_path = session_dir / "123e4567-e89b-12d3-a456-426614174000.jsonl"
+        file_path.write_text(
+            json.dumps({"type": "session", "id": "sess-1"}, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
+
+        parser = SessionParser(str(tmp_path / ".openclaw" / "agents"), session_format=SessionFormat.OPENCLAW)
+        info = parser.list_sessions()[0]
+        assert _extract_openclaw_agent_name(info.project_path) == "writer"
+        assert _make_session_id(info) == "openclaw:writer:123e4567-e89b-12d3-a456-426614174000"

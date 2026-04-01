@@ -12,7 +12,7 @@
     </div>
 
     <!-- 格式 Tab（多格式时显示） -->
-    <div v-if="settingsStore.claudeCodeEnabled || settingsStore.opencodeEnabled" class="format-tabs">
+    <div v-if="settingsStore.claudeCodeEnabled || settingsStore.opencodeEnabled || settingsStore.openclawEnabled" class="format-tabs">
       <button
         class="format-tab"
         :class="{ active: sessionStore.activeTab === 'codex' }"
@@ -38,6 +38,15 @@
       >
         {{ $t('session.format_opencode') }}
         <span class="tab-count">{{ sessionStore.opencodeSessions.length }}</span>
+      </button>
+      <button
+        v-if="settingsStore.openclawEnabled"
+        class="format-tab"
+        :class="{ active: sessionStore.activeTab === 'openclaw' }"
+        @click="sessionStore.setActiveTab('openclaw')"
+      >
+        {{ $t('session.format_openclaw') }}
+        <span class="tab-count">{{ sessionStore.openclawSessions.length }}</span>
       </button>
     </div>
 
@@ -223,6 +232,12 @@ watch(() => settingsStore.claudeCodeEnabled, (val) => {
 // 关闭 OpenCode 支持时，强制切回 Codex
 watch(() => settingsStore.opencodeEnabled, (val) => {
   if (!val && sessionStore.activeTab === 'opencode') {
+    sessionStore.setActiveTab('codex')
+  }
+})
+
+watch(() => settingsStore.openclawEnabled, (val) => {
+  if (!val && sessionStore.activeTab === 'openclaw') {
     sessionStore.setActiveTab('codex')
   }
 })

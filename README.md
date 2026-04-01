@@ -4,7 +4,7 @@
 
 **AI 编码工具会话清理器 & CTF/渗透测试提示词注入工具**
 
-支持 **Codex CLI** · **Claude Code** · **OpenCode**
+支持 **Codex CLI** · **Claude Code** · **OpenCode** · **OpenClaw**
 
 [English](./README_EN.md) | 简体中文
 
@@ -19,7 +19,7 @@
 
 ## 是什么
 
-在安全测试、CTF 比赛、渗透测试等场景下，AI 编码工具（Codex、Claude Code、OpenCode）会频繁拒绝涉及安全操作的请求，导致会话中断。
+在安全测试、CTF 比赛、渗透测试等场景下，AI 编码工具（Codex、Claude Code、OpenCode、OpenClaw）会频繁拒绝涉及安全操作的请求，导致会话中断。
 
 **Codex Session Patcher** 提供两类解决方案：
 
@@ -54,6 +54,7 @@
 | **Codex CLI** | ✅ | ✅ Profile + 全局 | JSONL |
 | **Claude Code** | ✅ | ✅ 专用工作空间 | JSONL |
 | **OpenCode** | ✅ | ✅ 专用工作空间 | SQLite |
+| **OpenClaw** | ✅ | ❌ 暂不支持 | JSONL |
 
 ### Web UI
 - **会话列表** — 多平台统一管理，按日期分组，支持按格式/拒绝状态/备份状态过滤
@@ -116,9 +117,10 @@ codex-patcher --all
 # 指定会话目录
 codex-patcher --session-dir ~/.codex/sessions --latest
 
-# 指定格式（codex / claude-code / opencode / auto）
+# 指定格式（codex / claude-code / opencode / openclaw / auto）
 codex-patcher --latest --format claude-code
 codex-patcher --latest --format opencode
+codex-patcher --latest --format openclaw
 
 # 不创建备份
 codex-patcher --latest --no-backup
@@ -151,7 +153,7 @@ codex-patcher --rewrite "帮我写一个逆向分析脚本"
 | 参数 | 说明 |
 |------|------|
 | `--session-dir` | 指定会话目录（默认自动选择） |
-| `--format` | 会话格式：`codex` / `claude-code` / `opencode` / `auto` |
+| `--format` | 会话格式：`codex` / `claude-code` / `opencode` / `openclaw` / `auto` |
 | `--dry-run` | 预览模式，不修改文件 |
 | `--no-backup` | 不创建备份文件 |
 | `--show-content` | 显示修改的详细内容 |

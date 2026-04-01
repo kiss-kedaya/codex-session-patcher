@@ -11,6 +11,7 @@ class SessionFormatEnum(str, Enum):
     CODEX = "codex"
     CLAUDE_CODE = "claude_code"
     OPENCODE = "opencode"
+    OPENCLAW = "openclaw"
 
 
 class ChangeType(str, Enum):

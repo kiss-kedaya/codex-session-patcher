@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-会话解析器 — 支持 Codex CLI 和 Claude Code 两种 JSONL 格式
+会话解析器 — 支持 Codex CLI / Claude Code / OpenClaw JSONL，以及 OpenCode 目录识别
 """
 from __future__ import annotations
 
@@ -38,6 +38,7 @@ class SessionParser:
         SessionFormat.CODEX: "~/.codex/sessions/",
         SessionFormat.CLAUDE_CODE: "~/.claude/projects/",
         SessionFormat.OPENCODE: "~/.local/share/opencode/",
+        SessionFormat.OPENCLAW: "~/.openclaw/agents/",
     }
 
     def __init__(self, session_dir: str = None, session_format: SessionFormat = None):
@@ -93,6 +94,9 @@ class SessionParser:
         if fmt == SessionFormat.CODEX:
             date, session_id = self._parse_codex_filename(filename, mtime_str)
             project_path = None
+        elif fmt == SessionFormat.OPENCLAW:
+            date, session_id = self._parse_openclaw_filename(filename, mtime_str)
+            project_path = self._extract_openclaw_project_path(full_path)
         else:
             date, session_id = self._parse_claude_filename(filename, mtime_str)
             project_path = self._extract_project_path(root)
@@ -113,10 +117,13 @@ class SessionParser:
         """自动检测文件格式"""
         codex_dir = os.path.expanduser("~/.codex/")
         claude_dir = os.path.expanduser("~/.claude/")
+        openclaw_dir = os.path.expanduser("~/.openclaw/")
         if root.startswith(codex_dir):
             return SessionFormat.CODEX
         if root.startswith(claude_dir):
             return SessionFormat.CLAUDE_CODE
+        if root.startswith(openclaw_dir):
+            return SessionFormat.OPENCLAW
         # 回退到内容检测
         return detect_session_format(full_path)
 
@@ -138,6 +145,14 @@ class SessionParser:
         return mtime_str[:10], filename[:8]
 
     @staticmethod
+    def _parse_openclaw_filename(filename: str, mtime_str: str) -> Tuple[str, str]:
+        """从 OpenClaw 会话文件名提取日期和 ID"""
+        uuid_match = re.match(r'([a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12})\.jsonl', filename)
+        if uuid_match:
+            return mtime_str[:10], uuid_match.group(1)[:8]
+        return mtime_str[:10], filename[:8]
+
+    @staticmethod
     def _extract_project_path(root: str) -> Optional[str]:
         """从 Claude Code 目录路径中提取项目路径"""
         claude_projects_dir = os.path.expanduser("~/.claude/projects/")
@@ -145,6 +160,20 @@ class SessionParser:
             encoded = root[len(claude_projects_dir):].rstrip('/')
             if encoded:
                 return decode_claude_project_path(encoded)
+        return None
+
+    @staticmethod
+    def _extract_openclaw_project_path(full_path: str) -> Optional[str]:
+        """从 OpenClaw 路径提取 agent/session 归属信息"""
+        normalized = full_path.replace('\\', '/')
+        marker = '/.openclaw/agents/'
+        idx = normalized.find(marker)
+        if idx == -1:
+            return None
+        rest = normalized[idx + len(marker):]
+        parts = [p for p in rest.split('/') if p]
+        if len(parts) >= 3 and parts[1] == 'sessions':
+            return f"agent:{parts[0]}"
         return None
 
     def parse_session_jsonl(self, file_path: str) -> List[Dict[str, Any]]:

@@ -246,12 +246,15 @@ def resolve_session_format(args) -> SessionFormat:
         return SessionFormat.CLAUDE_CODE
     elif fmt == 'opencode':
         return SessionFormat.OPENCODE
+    elif fmt == 'openclaw':
+        return SessionFormat.OPENCLAW
     else:
         # auto 模式：如果指定了 session-dir，则自动检测
         if args.session_dir is not None and args.session_dir != argparse.SUPPRESS:
             codex_dir = os.path.expanduser("~/.codex/")
             claude_dir = os.path.expanduser("~/.claude/")
             opencode_dir = os.path.expanduser("~/.local/share/opencode/")
+            openclaw_dir = os.path.expanduser("~/.openclaw/")
             expanded = os.path.expanduser(args.session_dir)
             if expanded.startswith(codex_dir):
                 return SessionFormat.CODEX
@@ -259,30 +262,36 @@ def resolve_session_format(args) -> SessionFormat:
                 return SessionFormat.CLAUDE_CODE
             if expanded.startswith(opencode_dir):
                 return SessionFormat.OPENCODE
+            if expanded.startswith(openclaw_dir):
+                return SessionFormat.OPENCLAW
 
         # 自动：如果两个目录都存在，优先 Codex（向后兼容）
         codex_dir = os.path.expanduser("~/.codex/sessions/")
         claude_dir = os.path.expanduser("~/.claude/projects/")
+        openclaw_dir = os.path.expanduser("~/.openclaw/agents/")
         has_codex = os.path.exists(codex_dir)
         has_claude = os.path.exists(claude_dir)
+        has_openclaw = os.path.exists(openclaw_dir)
 
-        if has_codex and not has_claude:
+        if has_codex and not has_claude and not has_openclaw:
             return SessionFormat.CODEX
-        elif has_claude and not has_codex:
+        elif has_claude and not has_codex and not has_openclaw:
             return SessionFormat.CLAUDE_CODE
+        elif has_openclaw and not has_codex and not has_claude:
+            return SessionFormat.OPENCLAW
         else:
             return SessionFormat.CODEX  # 默认
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Session Patcher - 清理 Codex CLI / Claude Code / OpenCode 会话中的拒绝回复和无效 thinking blocks'
+        description='Session Patcher - 清理 Codex CLI / Claude Code / OpenCode / OpenClaw 会话中的拒绝回复和无效 thinking blocks'
     )
 
     # 会话清理参数
     parser.add_argument('--session-dir', default=None,
                         help='会话目录 (默认根据 --format 自动选择)')
-    parser.add_argument('--format', choices=['codex', 'claude-code', 'opencode', 'auto'],
+    parser.add_argument('--format', choices=['codex', 'claude-code', 'opencode', 'openclaw', 'auto'],
                         default='auto',
                         help='会话格式 (默认: auto 自动检测)')
     parser.add_argument('--dry-run', action='store_true', help='仅预览，不实际修改文件')
@@ -373,7 +382,12 @@ def main():
     if session_dir is None:
         session_dir = SessionParser.DEFAULT_DIRS.get(session_format)
 
-    format_label = 'Codex' if session_format == SessionFormat.CODEX else 'Claude Code'
+    format_label_map = {
+        SessionFormat.CODEX: 'Codex',
+        SessionFormat.CLAUDE_CODE: 'Claude Code',
+        SessionFormat.OPENCLAW: 'OpenClaw',
+    }
+    format_label = format_label_map.get(session_format, 'Codex')
     print(f'模式: {format_label}')
     print(f'目录: {os.path.expanduser(session_dir)}')
     print()

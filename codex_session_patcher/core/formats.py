@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-会话格式策略 — 支持 Codex CLI 和 Claude Code 两种 JSONL 格式
+会话格式策略 — 支持 Codex CLI / Claude Code / OpenCode / OpenClaw
 """
 from __future__ import annotations
 
@@ -19,6 +19,7 @@ class SessionFormat(Enum):
     CODEX = "codex"
     CLAUDE_CODE = "claude_code"
     OPENCODE = "opencode"
+    OPENCLAW = "openclaw"
 
 
 # ─── 策略基类 ─────────────────────────────────────────────────────────────────
@@ -273,6 +274,83 @@ class OpenCodeFormatStrategy(FormatStrategy):
         return updated, removed
 
 
+# ─── OpenClaw 策略 ───────────────────────────────────────────────────────────
+
+class OpenClawFormatStrategy(FormatStrategy):
+    """OpenClaw JSONL 格式。
+
+    典型结构：
+    {
+        "type": "message",
+        "message": {
+            "role": "assistant",
+            "content": [
+                {"type": "text", "text": "..."},
+                {"type": "thinking", "thinking": "..."},
+                {"type": "toolCall", ...}
+            ]
+        }
+    }
+    """
+
+    def get_assistant_messages(self, lines: List[Dict[str, Any]]) -> List[Tuple[int, Dict[str, Any]]]:
+        messages = []
+        for idx, line in enumerate(lines):
+            if line.get('type') != 'message':
+                continue
+            msg = line.get('message', {})
+            if msg.get('role') == 'assistant':
+                messages.append((idx, line))
+        return messages
+
+    def get_thinking_items(self, lines: List[Dict[str, Any]]) -> List[Tuple[int, Dict[str, Any]]]:
+        return []
+
+    def extract_text_content(self, msg: Dict[str, Any]) -> str:
+        message = msg.get('message', {})
+        content = message.get('content', [])
+        if isinstance(content, str):
+            return content
+        if isinstance(content, list):
+            texts = []
+            for item in content:
+                if isinstance(item, dict) and item.get('type') == 'text':
+                    texts.append(item.get('text', ''))
+            return '\n'.join(texts)
+        return ''
+
+    def update_text_content(self, msg: Dict[str, Any], new_text: str) -> Dict[str, Any]:
+        updated = copy.deepcopy(msg)
+        message = updated.get('message', {})
+        content = message.get('content', [])
+        if isinstance(content, list):
+            replaced = False
+            for item in content:
+                if isinstance(item, dict) and item.get('type') == 'text':
+                    item['text'] = new_text
+                    replaced = True
+                    break
+            if not replaced:
+                content.append({'type': 'text', 'text': new_text})
+        else:
+            message['content'] = [{'type': 'text', 'text': new_text}]
+        return updated
+
+    def remove_thinking_from_message(self, msg: Dict[str, Any]) -> Tuple[Dict[str, Any], int]:
+        updated = copy.deepcopy(msg)
+        message = updated.get('message', {})
+        content = message.get('content', [])
+        if not isinstance(content, list):
+            return updated, 0
+        original_len = len(content)
+        message['content'] = [
+            item for item in content
+            if not (isinstance(item, dict) and item.get('type') == 'thinking')
+        ]
+        removed = original_len - len(message['content'])
+        return updated, removed
+
+
 # ─── 工厂 & 工具函数 ──────────────────────────────────────────────────────────
 
 def get_format_strategy(fmt: SessionFormat) -> FormatStrategy:
@@ -282,6 +360,8 @@ def get_format_strategy(fmt: SessionFormat) -> FormatStrategy:
         return ClaudeCodeFormatStrategy()
     elif fmt == SessionFormat.OPENCODE:
         return OpenCodeFormatStrategy()
+    elif fmt == SessionFormat.OPENCLAW:
+        return OpenClawFormatStrategy()
     raise ValueError(f"未知的会话格式: {fmt}")
 
 
@@ -304,6 +384,10 @@ def detect_session_format(file_path: str) -> SessionFormat:
                     return SessionFormat.CODEX
                 if line_type in ('assistant', 'user', 'system', 'file-history-snapshot', 'last-prompt'):
                     return SessionFormat.CLAUDE_CODE
+                if line_type == 'message':
+                    message = data.get('message', {})
+                    if isinstance(message, dict) and message.get('role') in ('assistant', 'user', 'toolResult'):
+                        return SessionFormat.OPENCLAW
     except Exception:
         logger.warning("检测会话格式失败: %s", file_path, exc_info=True)
     # 回退：根据目录路径推测
@@ -316,12 +400,15 @@ def _detect_format_from_path(file_path: str) -> SessionFormat:
     codex_dir = os.path.expanduser("~/.codex/")
     claude_dir = os.path.expanduser("~/.claude/")
     opencode_dir = os.path.expanduser("~/.local/share/opencode/")
+    openclaw_dir = os.path.expanduser("~/.openclaw/")
     if expanded.startswith(codex_dir):
         return SessionFormat.CODEX
     if expanded.startswith(claude_dir):
         return SessionFormat.CLAUDE_CODE
     if expanded.startswith(opencode_dir) or expanded.endswith('.db'):
         return SessionFormat.OPENCODE
+    if expanded.startswith(openclaw_dir):
+        return SessionFormat.OPENCLAW
     return SessionFormat.CODEX  # 默认回退
 
 

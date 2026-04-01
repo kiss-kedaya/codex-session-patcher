@@ -12,18 +12,20 @@ export const useSessionStore = defineStore('session', () => {
   const aiRewrite = ref(null)
   const aiRewriteLoading = ref(false)
   const lastError = ref(null) // 最近一次错误信息，组件层可监听并展示
-  const activeTab = ref('codex') // 'codex' | 'claude_code' | 'opencode'
+  const activeTab = ref('codex') // 'codex' | 'claude_code' | 'opencode' | 'openclaw'
   let _tabInitialized = false
 
   // 按格式拆分
   const codexSessions = computed(() => sessions.value.filter(s => s.format === 'codex'))
   const claudeSessions = computed(() => sessions.value.filter(s => s.format === 'claude_code'))
   const opencodeSessions = computed(() => sessions.value.filter(s => s.format === 'opencode'))
+  const openclawSessions = computed(() => sessions.value.filter(s => s.format === 'openclaw'))
 
   // 当前 Tab 的会话
   const activeTabSessions = computed(() => {
     if (activeTab.value === 'codex') return codexSessions.value
     if (activeTab.value === 'opencode') return opencodeSessions.value
+    if (activeTab.value === 'openclaw') return openclawSessions.value
     return claudeSessions.value
   })
 
@@ -46,6 +48,8 @@ export const useSessionStore = defineStore('session', () => {
             activeTab.value = 'claude_code'
           } else if (opencodeSessions.value.length > 0) {
             activeTab.value = 'opencode'
+          } else if (settingsStore.openclawEnabled && openclawSessions.value.length > 0) {
+            activeTab.value = 'openclaw'
           }
         }
       }
@@ -188,6 +192,7 @@ export const useSessionStore = defineStore('session', () => {
     codexSessions,
     claudeSessions,
     opencodeSessions,
+    openclawSessions,
     activeTabSessions,
     fetchSessions,
     setActiveTab,

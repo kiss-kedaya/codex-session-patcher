@@ -76,6 +76,16 @@
               <span class="form-hint">{{ $t('settings.opencodeEnabledHint') }}</span>
             </template>
           </n-form-item>
+
+          <n-form-item :label="$t('settings.openclawEnabled')">
+            <n-switch
+              :value="settingsStore.openclawEnabled"
+              @update:value="settingsStore.setOpenclawEnabled"
+            />
+            <template #feedback>
+              <span class="form-hint">{{ $t('settings.openclawEnabledHint') }}</span>
+            </template>
+          </n-form-item>
         </n-space>
       </n-card>
 

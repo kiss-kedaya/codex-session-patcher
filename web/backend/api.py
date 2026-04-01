@@ -45,6 +45,7 @@ router = APIRouter()
 # 默认路径
 DEFAULT_SESSION_DIR = os.path.expanduser("~/.codex/sessions/")
 DEFAULT_CLAUDE_SESSION_DIR = os.path.expanduser("~/.claude/projects/")
+DEFAULT_OPENCLAW_SESSION_DIR = os.path.expanduser("~/.openclaw/agents/")
 DEFAULT_MEMORY_FILE = os.path.expanduser("~/.codex/memories/MEMORY.md")
 DEFAULT_CONFIG_FILE = os.path.expanduser("~/.codex-patcher/config.json")
 
@@ -125,6 +126,8 @@ def _resolve_format(format_str: str) -> Optional[SessionFormat]:
         return SessionFormat.CLAUDE_CODE
     elif format_str == 'opencode':
         return SessionFormat.OPENCODE
+    elif format_str == 'openclaw':
+        return SessionFormat.OPENCLAW
     return None  # auto
 
 
@@ -134,6 +137,8 @@ def _to_schema_format(fmt: SessionFormat) -> SessionFormatEnum:
         return SessionFormatEnum.CLAUDE_CODE
     elif fmt == SessionFormat.OPENCODE:
         return SessionFormatEnum.OPENCODE
+    elif fmt == SessionFormat.OPENCLAW:
+        return SessionFormatEnum.OPENCLAW
     return SessionFormatEnum.CODEX
 
 
@@ -166,7 +171,7 @@ def check_session_refusal(file_path: str, fmt: SessionFormat = SessionFormat.COD
 
 def count_thinking_blocks(file_path: str, fmt: SessionFormat) -> int:
     """统计 Claude Code 会话中 thinking block 的数量"""
-    if fmt != SessionFormat.CLAUDE_CODE:
+    if fmt not in (SessionFormat.CLAUDE_CODE, SessionFormat.OPENCLAW):
         return 0
     count = 0
     try:
@@ -179,7 +184,11 @@ def count_thinking_blocks(file_path: str, fmt: SessionFormat) -> int:
                     data = json.loads(raw_line)
                 except json.JSONDecodeError:
                     continue
-                if data.get('type') != 'assistant':
+                if fmt == SessionFormat.CLAUDE_CODE and data.get('type') != 'assistant':
+                    continue
+                if fmt == SessionFormat.OPENCLAW and data.get('type') != 'message':
+                    continue
+                if fmt == SessionFormat.OPENCLAW and data.get('message', {}).get('role') != 'assistant':
                     continue
                 content = data.get('message', {}).get('content', [])
                 if isinstance(content, list):
@@ -213,12 +222,16 @@ def list_sessions(
             scan_targets.append((DEFAULT_SESSION_DIR, SessionFormat.CODEX))
         if os.path.exists(DEFAULT_CLAUDE_SESSION_DIR):
             scan_targets.append((DEFAULT_CLAUDE_SESSION_DIR, SessionFormat.CLAUDE_CODE))
+        if os.path.exists(DEFAULT_OPENCLAW_SESSION_DIR):
+            scan_targets.append((DEFAULT_OPENCLAW_SESSION_DIR, SessionFormat.OPENCLAW))
         if os.path.exists(DEFAULT_OPENCODE_DB):
             scan_opencode = True
     elif session_format == SessionFormat.CODEX:
         scan_targets.append((DEFAULT_SESSION_DIR, SessionFormat.CODEX))
     elif session_format == SessionFormat.CLAUDE_CODE:
         scan_targets.append((DEFAULT_CLAUDE_SESSION_DIR, SessionFormat.CLAUDE_CODE))
+    elif session_format == SessionFormat.OPENCLAW:
+        scan_targets.append((DEFAULT_OPENCLAW_SESSION_DIR, SessionFormat.OPENCLAW))
     elif session_format == SessionFormat.OPENCODE:
         scan_opencode = True
 
@@ -309,6 +322,8 @@ def _session_core_format(session: Session) -> SessionFormat:
         return SessionFormat.CLAUDE_CODE
     elif session.format == SessionFormatEnum.OPENCODE:
         return SessionFormat.OPENCODE
+    elif session.format == SessionFormatEnum.OPENCLAW:
+        return SessionFormat.OPENCLAW
     return SessionFormat.CODEX
 
 
@@ -410,6 +425,19 @@ def preview_session(file_path: str, mock_response: str = MOCK_RESPONSE,
         elif line_type == 'assistant':
             role = 'assistant'
             content = strategy.extract_text_content(line)
+        elif line_type == 'message':
+            msg = line.get('message', {})
+            msg_role = msg.get('role', '')
+            if msg_role in ('user', 'assistant'):
+                role = msg_role
+                msg_content = msg.get('content', [])
+                if msg_role == 'assistant':
+                    content = strategy.extract_text_content(line)
+                elif isinstance(msg_content, str):
+                    content = msg_content
+                elif isinstance(msg_content, list):
+                    texts = [item.get('text', '') for item in msg_content if isinstance(item, dict) and item.get('type') == 'text']
+                    content = '\n'.join(texts)
 
         # Codex 格式
         elif line_type == 'response_item':

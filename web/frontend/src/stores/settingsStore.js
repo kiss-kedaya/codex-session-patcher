@@ -12,6 +12,7 @@ export const useSettingsStore = defineStore('settings', () => {
   const showAllSessions = ref(localStorage.getItem('showAllSessions') === 'true')
   const claudeCodeEnabled = ref(localStorage.getItem('claudeCodeEnabled') === 'true')
   const opencodeEnabled = ref(localStorage.getItem('opencodeEnabled') === 'true')
+  const openclawEnabled = ref(localStorage.getItem('openclawEnabled') === 'true')
   const loading = ref(false)
   const changed = ref(false)
 
@@ -83,6 +84,11 @@ export const useSettingsStore = defineStore('settings', () => {
     localStorage.setItem('opencodeEnabled', val ? 'true' : 'false')
   }
 
+  function setOpenclawEnabled(val) {
+    openclawEnabled.value = val
+    localStorage.setItem('openclawEnabled', val ? 'true' : 'false')
+  }
+
   return {
     aiEnabled,
     aiEndpoint,
@@ -93,6 +99,7 @@ export const useSettingsStore = defineStore('settings', () => {
     showAllSessions,
     claudeCodeEnabled,
     opencodeEnabled,
+    openclawEnabled,
     loading,
     changed,
     loadSettings,
@@ -102,5 +109,6 @@ export const useSettingsStore = defineStore('settings', () => {
     setShowAllSessions,
     setClaudeCodeEnabled,
     setOpencodeEnabled,
+    setOpenclawEnabled,
   }
 })

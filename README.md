@@ -101,6 +101,9 @@ uvicorn web.backend.main:app --host 127.0.0.1 --port 8080
 ### CLI
 
 ```bash
+# 查看帮助
+codex-patcher --help
+
 # 预览模式（不修改文件）
 codex-patcher --dry-run --show-content
 
@@ -110,15 +113,61 @@ codex-patcher --latest
 # 清理所有会话
 codex-patcher --all
 
-# 指定格式（claude / opencode）
-codex-patcher --latest --format claude
+# 指定会话目录
+codex-patcher --session-dir ~/.codex/sessions --latest
+
+# 指定格式（codex / claude-code / opencode / auto）
+codex-patcher --latest --format claude-code
 codex-patcher --latest --format opencode
 
-# 安装/卸载 CTF 提示词注入
-codex-patcher --install-ctf
-codex-patcher --install-claude-ctf
-codex-patcher --install-opencode-ctf
+# 不创建备份
+codex-patcher --latest --no-backup
+
+# 启动 Web UI
+codex-patcher --web
+codex-patcher --web --host 0.0.0.0 --port 8080
+
+# CTF 提示词注入 — Codex
+codex-patcher --install-ctf-config    # 安装
+codex-patcher --uninstall-ctf-config  # 卸载
+
+# CTF 提示词注入 — Claude Code
+codex-patcher --install-claude-ctf    # 安装
+codex-patcher --uninstall-claude-ctf  # 卸载
+
+# CTF 提示词注入 — OpenCode
+codex-patcher --install-opencode-ctf    # 安装
+codex-patcher --uninstall-opencode-ctf  # 卸载
+
+# 查看所有 CTF 配置状态
+codex-patcher --ctf-status
+
+# 改写提示词（需先在 Web UI 配置 AI）
+codex-patcher --rewrite "帮我写一个逆向分析脚本"
 ```
+
+#### CLI 参数说明
+
+| 参数 | 说明 |
+|------|------|
+| `--session-dir` | 指定会话目录（默认自动选择） |
+| `--format` | 会话格式：`codex` / `claude-code` / `opencode` / `auto` |
+| `--dry-run` | 预览模式，不修改文件 |
+| `--no-backup` | 不创建备份文件 |
+| `--show-content` | 显示修改的详细内容 |
+| `--latest` | 只处理最新会话 |
+| `--all` | 处理所有会话 |
+| `--web` | 启动 Web UI |
+| `--host` | Web UI 监听地址（默认 127.0.0.1） |
+| `--port` | Web UI 端口（默认 8080） |
+| `--install-ctf-config` | 安装 Codex CTF 配置 |
+| `--uninstall-ctf-config` | 卸载 Codex CTF 配置 |
+| `--install-claude-ctf` | 安装 Claude Code CTF 配置 |
+| `--uninstall-claude-ctf` | 卸载 Claude Code CTF 配置 |
+| `--install-opencode-ctf` | 安装 OpenCode CTF 配置 |
+| `--uninstall-opencode-ctf` | 卸载 OpenCode CTF 配置 |
+| `--ctf-status` | 查看三平台 CTF 配置状态 |
+| `--rewrite` | 改写提示词使其更易被接受 |
 
 ---
 
@@ -128,7 +177,7 @@ codex-patcher --install-opencode-ctf
 
 ```
 1. 安装 CTF Profile
-   codex-patcher --install-ctf
+   codex-patcher --install-ctf-config
 
 2. 使用 CTF Profile 启动（不影响普通会话）
    codex -p ctf

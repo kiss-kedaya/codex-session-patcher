@@ -101,6 +101,9 @@ Visit `http://localhost:8080`
 ### CLI
 
 ```bash
+# Show help
+codex-patcher --help
+
 # Preview mode (no file modification)
 codex-patcher --dry-run --show-content
 
@@ -110,15 +113,61 @@ codex-patcher --latest
 # Clean all sessions
 codex-patcher --all
 
-# Specify format (claude / opencode)
-codex-patcher --latest --format claude
+# Specify session directory
+codex-patcher --session-dir ~/.codex/sessions --latest
+
+# Specify format (codex / claude-code / opencode / auto)
+codex-patcher --latest --format claude-code
 codex-patcher --latest --format opencode
 
-# Install/uninstall CTF prompt injection
-codex-patcher --install-ctf
-codex-patcher --install-claude-ctf
-codex-patcher --install-opencode-ctf
+# No backup
+codex-patcher --latest --no-backup
+
+# Launch Web UI
+codex-patcher --web
+codex-patcher --web --host 0.0.0.0 --port 8080
+
+# CTF Prompt Injection — Codex
+codex-patcher --install-ctf-config    # Install
+codex-patcher --uninstall-ctf-config  # Uninstall
+
+# CTF Prompt Injection — Claude Code
+codex-patcher --install-claude-ctf    # Install
+codex-patcher --uninstall-claude-ctf  # Uninstall
+
+# CTF Prompt Injection — OpenCode
+codex-patcher --install-opencode-ctf    # Install
+codex-patcher --uninstall-opencode-ctf  # Uninstall
+
+# View all CTF config status
+codex-patcher --ctf-status
+
+# Rewrite prompt (requires AI config in Web UI first)
+codex-patcher --rewrite "Help me write a reverse analysis script"
 ```
+
+#### CLI Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `--session-dir` | Specify session directory (auto-selected by default) |
+| `--format` | Session format: `codex` / `claude-code` / `opencode` / `auto` |
+| `--dry-run` | Preview mode, don't modify files |
+| `--no-backup` | Don't create backup files |
+| `--show-content` | Show detailed modification content |
+| `--latest` | Process only the latest session |
+| `--all` | Process all sessions |
+| `--web` | Launch Web UI |
+| `--host` | Web UI listen address (default 127.0.0.1) |
+| `--port` | Web UI port (default 8080) |
+| `--install-ctf-config` | Install Codex CTF config |
+| `--uninstall-ctf-config` | Uninstall Codex CTF config |
+| `--install-claude-ctf` | Install Claude Code CTF config |
+| `--uninstall-claude-ctf` | Uninstall Claude Code CTF config |
+| `--install-opencode-ctf` | Install OpenCode CTF config |
+| `--uninstall-opencode-ctf` | Uninstall OpenCode CTF config |
+| `--ctf-status` | View CTF config status for all platforms |
+| `--rewrite` | Rewrite prompt for better acceptance |
 
 ---
 
@@ -128,7 +177,7 @@ codex-patcher --install-opencode-ctf
 
 ```
 1. Install CTF Profile
-   codex-patcher --install-ctf
+   codex-patcher --install-ctf-config
 
 2. Launch with CTF profile (doesn't affect normal sessions)
    codex -p ctf

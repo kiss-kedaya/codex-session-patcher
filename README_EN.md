@@ -4,7 +4,7 @@
 
 **AI Coding Session Cleaner & CTF/Pentest Prompt Injection Tool**
 
-Supports **Codex CLI** · **Claude Code** · **OpenCode**
+Supports **Codex CLI** · **Claude Code** · **OpenCode** · **OpenClaw**
 
 [简体中文](./README.md) | English
 
@@ -19,7 +19,7 @@ Supports **Codex CLI** · **Claude Code** · **OpenCode**
 
 ## What is this?
 
-AI coding tools (Codex, Claude Code, OpenCode) frequently refuse security-related requests in CTF competitions, penetration testing, and security research scenarios, causing sessions to break.
+AI coding tools (Codex, Claude Code, OpenCode, OpenClaw) frequently refuse security-related requests in CTF competitions, penetration testing, and security research scenarios, causing sessions to break.
 
 **Codex Session Patcher** provides two types of solutions:
 
@@ -54,6 +54,7 @@ AI coding tools (Codex, Claude Code, OpenCode) frequently refuse security-relate
 | **Codex CLI** | ✅ | ✅ Profile + Global | JSONL |
 | **Claude Code** | ✅ | ✅ Dedicated workspace | JSONL |
 | **OpenCode** | ✅ | ✅ Dedicated workspace | SQLite |
+| **OpenClaw** | ✅ | ❌ Not supported yet | JSONL |
 
 ### Web UI
 - **Session List** — Unified multi-platform management, grouped by date, filter by format/refusal status/backup status
@@ -116,9 +117,10 @@ codex-patcher --all
 # Specify session directory
 codex-patcher --session-dir ~/.codex/sessions --latest
 
-# Specify format (codex / claude-code / opencode / auto)
+# Specify format (codex / claude-code / opencode / openclaw / auto)
 codex-patcher --latest --format claude-code
 codex-patcher --latest --format opencode
+codex-patcher --latest --format openclaw
 
 # No backup
 codex-patcher --latest --no-backup
@@ -151,7 +153,7 @@ codex-patcher --rewrite "Help me write a reverse analysis script"
 | Argument | Description |
 |----------|-------------|
 | `--session-dir` | Specify session directory (auto-selected by default) |
-| `--format` | Session format: `codex` / `claude-code` / `opencode` / `auto` |
+| `--format` | Session format: `codex` / `claude-code` / `opencode` / `openclaw` / `auto` |
 | `--dry-run` | Preview mode, don't modify files |
 | `--no-backup` | Don't create backup files |
 | `--show-content` | Show detailed modification content |
